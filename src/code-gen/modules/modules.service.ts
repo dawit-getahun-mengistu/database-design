@@ -16,7 +16,7 @@ export class ModulesService {
     private readonly modelItemRepository: Repository<ModelItem>,
   ) {
     this.moduleTemplate = fs.readFileSync(
-      'src/code-gen/modules/template/module-template.hbs',
+      'src/code-gen/templates/module-template.hbs',
       'utf8',
     );
   }

@@ -16,7 +16,7 @@ export class ServicesService {
     private readonly modelItemRepository: Repository<ModelItem>,
   ) {
     this.serviceTemplate = fs.readFileSync(
-      'src/code-gen/services/template/service-template.hbs',
+      'src/code-gen/templates/service-template.hbs',
       'utf8',
     );
   }

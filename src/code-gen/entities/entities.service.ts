@@ -28,27 +28,23 @@ export class EntitiesService {
   ) {
     // get template file
     this.entityTemplate = fs.readFileSync(
-      'src/code-gen/entities/template/entity-template.hbs',
+      'src/code-gen/templates/entity-template.hbs',
       'utf8',
     );
-
-    // get all models
-    this.setUpModels();
   }
 
-  async setUpModels() {
+  async setUpAllModels() {
     this.allModels = await this.modelService.findAll();
   }
 
   async generateByModelId(modelId: string) {
     let model = this.allModels.find((model) => model.id === modelId);
     if (!model) {
-      this.setUpModels();
+      this.setUpAllModels();
       model = this.allModels.find((model) => model.id === modelId);
       if (!model) {
         throw new NotFoundException(`Model with id ${modelId} not found`);
       }
-      
     }
 
     const properties = model.columns
@@ -105,11 +101,16 @@ export class EntitiesService {
   }
 
   async generateAllEntities(projectId: string) {
+    this.allModels = await this.modelService.findAll();
+
     const projectModels = this.allModels.filter(
       (model) => model.project.id === projectId,
     );
+    const projectName = projectModels[0].project.projectName;
+    const projectDescription = projectModels[0].project.description;
+
     if (!projectModels.length) {
-      this.setUpModels();
+      this.setUpAllModels();
       return this.generateAllEntities(projectId);
     }
 
@@ -119,9 +120,9 @@ export class EntitiesService {
       })),
     );
 
-    return Object.assign(
-      { projectModels: projectModels },
-      ...generatedEntities,
-    );
+    return [
+      Object.assign({ projectModels: projectModels }, ...generatedEntities),
+      { projectName, projectDescription },
+    ];
   }
 }

@@ -16,7 +16,7 @@ export class ControllersService {
     private readonly modelItemRepository: Repository<ModelItem>,
   ) {
     this.controllerTemplate = fs.readFileSync(
-      'src/code-gen/controllers/template/controller-template.hbs',
+      'src/code-gen/templates/controller-template.hbs',
       'utf8',
     );
   }

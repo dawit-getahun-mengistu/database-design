@@ -15,7 +15,7 @@ export class DtosService {
     private readonly modelItemRepository: Repository<ModelItem>,
   ) {
     this.dtoTemplate = fs.readFileSync(
-      'src/code-gen/dtos/template/dto-template.hbs',
+      'src/code-gen/templates/dto-template.hbs',
       'utf8',
     );
   }
