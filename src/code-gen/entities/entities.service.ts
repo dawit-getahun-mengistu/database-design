@@ -12,6 +12,7 @@ import { ModelService } from 'src/database/model/model.service';
 @Injectable()
 export class EntitiesService {
   private readonly entityTemplate: string;
+  private readonly barrelTemplate: string;
   private allModels: ModelItem[];
 
   constructor(
@@ -29,6 +30,10 @@ export class EntitiesService {
     // get template file
     this.entityTemplate = fs.readFileSync(
       'src/code-gen/templates/entity-template.hbs',
+      'utf8',
+    );
+    this.barrelTemplate = fs.readFileSync(
+      'src/code-gen/templates/barrel-template.hbs',
       'utf8',
     );
   }
@@ -124,5 +129,12 @@ export class EntitiesService {
       Object.assign({ projectModels: projectModels }, ...generatedEntities),
       { projectName, projectDescription },
     ];
+  }
+
+  generateBarrel(classNames: string[]) {
+    const barrel = {
+      files: classNames.map((className) => className + '.entity'),
+    };
+    return this.handlebarsService.compileTemplate(this.barrelTemplate, barrel);
   }
 }

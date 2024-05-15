@@ -22,22 +22,34 @@ export class FileIoService {
     private readonly bootstrapService: BootstrapService,
   ) {}
 
-  async getProject(id: string) {
-    const [entites, projectData] = await this.entitiesService.generateAllEntities(id);
+  async getProject(id: string, pattern: string = "default") {
+    console.log('pattern: ', pattern);
+    const [entites, projectData] =
+      await this.entitiesService.generateAllEntities(id);
     const entityNamesList = Object.keys(entites).slice(1);
 
     const dtos = await this.dtosService.generateAllDTOsByProject(
       entites['projectModels'],
     );
     const controllers =
-      this.controllersService.generateControllers(entityNamesList);
-    const services = this.servicesService.generateServices(entityNamesList);
-    const modules = this.modulesService.generateModules(entityNamesList);
-    const appModule = this.bootstrapService.generateAppModule(entityNamesList);
+      this.controllersService.generateControllers(entityNamesList, pattern);
+    const services = this.servicesService.generateServices(entityNamesList, pattern);
+    const modules = this.modulesService.generateModules(entityNamesList, pattern);
+    const appModule = this.bootstrapService.generateAppModule(entityNamesList, pattern);
     const bootstrap = this.bootstrapService.getMainBootstrap();
-    const packageJson = this.bootstrapService.generatePackageJson(projectData.projectName, projectData.projectDescription);
+    const packageJson = this.bootstrapService.generatePackageJson(
+      projectData.projectName,
+      projectData.projectDescription,
+    );
     const tsconfig = this.bootstrapService.generateTsConfig();
-    
+
+    // barrell code
+    const controllersBarrel =
+      this.controllersService.generateBarrel(entityNamesList);
+    const dtosBarrel = this.dtosService.generateBarrel(entityNamesList);
+    const servicesBarrel = this.servicesService.generateBarrel(entityNamesList);
+    const entityBarrel = this.entitiesService.generateBarrel(entityNamesList);
+    const moduleBarrel = this.modulesService.generateBarrel(entityNamesList);
 
     const project = {
       ...projectData,
@@ -60,24 +72,46 @@ export class FileIoService {
       if (key === 'projectModels') {
         continue;
       }
-      zip.file(`${project_name}/src/entities/${key}.entity.ts`, value as string);
+      zip.file(
+        `${project_name}/src/entities/${key}.entity.ts`,
+        value as string,
+      );
     }
+    zip.file(`${project_name}/src/entities/index.ts`, entityBarrel);
+
+
     // for dtos
     for (const [key, value] of Object.entries(dtos)) {
       zip.file(`${project_name}/src/dtos/${key}.dto.ts`, value as string);
     }
+    zip.file(`${project_name}/src/dtos/index.ts`, dtosBarrel);
+
     // for controllers
     for (const [key, value] of Object.entries(controllers)) {
-      zip.file(`${project_name}/src/${key}/controllers/${key}.controller.ts`, value as string);
+      zip.file(
+        `${project_name}/src/modules/${key}/controllers/${key}.controller.ts`,
+        value as string,
+      );
+      zip.file(`${project_name}/src/modules/${key}/controllers/index.ts`, this.controllersService.generateBarrel([key]));
     }
+    // zip.file(`${project_name}/src/controllers/index.ts`, controllersBarrel);
+
     // for services
     for (const [key, value] of Object.entries(services)) {
-      zip.file(`${project_name}/src/${key}/services/${key}.service.ts`, value as string);
+      zip.file(
+        `${project_name}/src/modules/${key}/services/${key}.service.ts`,
+        value as string,
+      );
+      zip.file(`${project_name}/src/modules/${key}/services/index.ts`, this.servicesService.generateBarrel([key]));
     }
+    // zip.file(`${project_name}/src/services/index.ts`, servicesBarrel);
+
     // for modules
     for (const [key, value] of Object.entries(modules)) {
       zip.file(`${project_name}/src/${key}/${key}.module.ts`, value as string);
+      zip.file(`${project_name}/src/${key}/index.ts`, this.modulesService.generateBarrel([key]));
     }
+    // zip.file(`${project_name}/src/modules/index.ts`, moduleBarrel);
     // for bootstrap
     zip.file(`${project_name}/src/app.module.ts`, appModule as string);
     zip.file(`${project_name}/src/main.ts`, bootstrap as string);
@@ -91,15 +125,19 @@ export class FileIoService {
     const zipFilePath = `src/file-io/output/${project_name}.zip`;
     await writeFileAsync(zipFilePath, zipContent);
 
+    console.log('Controllers Barrel ', controllersBarrel);
+    console.log('Dtos Barrel ', dtosBarrel);
+    console.log('Services Barrel ', servicesBarrel);
+    console.log('Entities Barrel ', entityBarrel);
+    console.log('Modules Barrel ', moduleBarrel);
+
     return { path: zipFilePath, project };
   }
 
   toKebabCase(text: string): string {
     let kebabCaseText = text.replace(/\s+/g, '-');
-    
+
     kebabCaseText = kebabCaseText.toLowerCase();
     return kebabCaseText;
   }
-
-  
 }

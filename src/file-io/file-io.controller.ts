@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Res } from '@nestjs/common';
+import { Body, Controller, Get, Param, Res } from '@nestjs/common';
 import { FileIoService } from './file-io.service';
 import { Response } from 'express';
 import * as fs from 'fs';
@@ -11,11 +11,12 @@ export class FileIoController {
   @Get('project/:projectId')
   async downloadProject(
     @Param('projectId') projectId: string,
+    @Body() pattern: String,
     @Res() res: Response,
   ) {
     try {
       // Generate the zip file
-      const project = await this.fileIoService.getProject(projectId);
+    const project = await this.fileIoService.getProject(projectId, pattern == FileStructre.layered ? "layered": "default");
       const zipFilePath = project.path;
 
       // Send the zip file
@@ -32,4 +33,10 @@ export class FileIoController {
       res.status(500).send('Error downloading project');
     }
   }
+}
+
+
+enum FileStructre {
+  default = "default",
+  layered = "layered",
 }

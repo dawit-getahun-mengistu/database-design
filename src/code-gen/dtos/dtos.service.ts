@@ -9,6 +9,7 @@ import { HandlebarsService } from 'src/handlebars.service';
 @Injectable()
 export class DtosService {
   private readonly dtoTemplate: string;
+  private readonly barrelTemplate: string;
   constructor(
     private readonly handlebarsService: HandlebarsService,
     @InjectRepository(ModelItem)
@@ -16,6 +17,10 @@ export class DtosService {
   ) {
     this.dtoTemplate = fs.readFileSync(
       'src/code-gen/templates/dto-template.hbs',
+      'utf8',
+    );
+    this.barrelTemplate = fs.readFileSync(
+      'src/code-gen/templates/barrel-template.hbs',
       'utf8',
     );
   }
@@ -62,5 +67,13 @@ export class DtosService {
       })),
     );
     return Object.assign({}, ...generatedDTOs);
+  }
+
+  generateBarrel(classNames: string[]) {
+    const barrel = {
+      files: classNames.map((className) => className + '.dto'),
+    };
+
+    return this.handlebarsService.compileTemplate(this.barrelTemplate, barrel);
   }
 }
